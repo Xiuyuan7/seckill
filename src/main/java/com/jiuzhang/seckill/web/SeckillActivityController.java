@@ -156,4 +156,14 @@ public class SeckillActivityController {
         return modelAndView;
     }
 
+    /**
+     * 订单支付
+     * @return
+     */
+    @RequestMapping("/seckill/payOrder/{orderNo}")
+    public String payOrder(@PathVariable String orderNo) throws Exception {
+        seckillActivityService.payOrderProcess(orderNo);
+        return "redirect:/seckill/orderQuery/" + orderNo;
+    }
+
 }

@@ -65,4 +65,6 @@ public class SeckillActivityService {
         return order;
     }
 
+    public void payOrderProcess(String orderNo) {
+    }
 }
