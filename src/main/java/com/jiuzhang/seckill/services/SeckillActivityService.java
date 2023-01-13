@@ -1,16 +1,21 @@
 package com.jiuzhang.seckill.services;
 
 import com.alibaba.fastjson.JSON;
+import com.jiuzhang.seckill.db.dao.OrderDao;
 import com.jiuzhang.seckill.db.dao.SeckillActivityDao;
 import com.jiuzhang.seckill.db.po.Order;
 import com.jiuzhang.seckill.db.po.SeckillActivity;
 import com.jiuzhang.seckill.mq.RocketMQService;
 import com.jiuzhang.seckill.util.RedisService;
 import com.jiuzhang.seckill.util.SnowFlake;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
+
 @Service
+@Slf4j
 public class SeckillActivityService {
 
     @Autowired
@@ -21,6 +26,9 @@ public class SeckillActivityService {
 
     @Autowired
     private RocketMQService rocketMQService;
+
+    @Autowired
+    OrderDao orderDao;
 
     /**
      * datacenterId; 数据中心
@@ -65,6 +73,20 @@ public class SeckillActivityService {
         return order;
     }
 
+    /**
+     * 订单支付完成处理
+     * @param orderNo
+     */
     public void payOrderProcess(String orderNo) {
+        log.info("完成支付订单 订单号：" + orderNo);
+        Order order = orderDao.queryOrder(orderNo);
+        boolean deductStockResult = seckillActivityDao.deductStock(order.getSeckillActivityId());
+        if (deductStockResult) {
+            order.setPayTime(new Date());
+            // 订单状态 0、没有可用库存，无效订单 1、已创建等待支付 2、完成支付
+            order.setOrderStatus(2);
+            orderDao.updateOrder(order);
+        }
     }
+
 }
